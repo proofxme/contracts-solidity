@@ -18,7 +18,7 @@ contract PoXMigration is Ownable {
 
     IERC20 public euler;
     uint256 public eulerTxFee = 100;
-    uint256 public minDepositAmount = 4000;
+    uint256 public minDepositAmount = 4000 * 10**18;
     bool public isMigrationActive = false;
 
     mapping(address => UserInfo) public userInfo;
@@ -69,9 +69,7 @@ contract PoXMigration is Ownable {
         );
 
         if (amount > 0) {
-            euler.safeTransferFrom(address(msg.sender), address(this), amount);
-            // Lost 1% fee from transaction
-            amount = amount - (amount * eulerTxFee) / 100;
+            euler.transferFrom(address(msg.sender), address(this), amount);
             user.amount = user.amount + amount;
         }
 
