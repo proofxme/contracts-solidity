@@ -28,7 +28,7 @@ export async function deployAffiliate() {
 export async function deployMembership() {
   const [deployerWallet] = await hre.viem.getWalletClients();
 
-  const myMembership = await hre.viem.deployContract("PoMembership", [deployerWallet.account.address]);
+  const myMembership = await hre.viem.deployContract("PoMembership", [deployerWallet.account.address, deployerWallet.account.address]);
 
   return { myMembership };
 }

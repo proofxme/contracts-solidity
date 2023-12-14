@@ -235,4 +235,73 @@ describe("PoXMigration process", function () {
     const newTokenBalance = await myNewToken.read.balanceOf([deployerWallet.account.address]);
     assert.equal(newTokenBalance, amount);
   })
+  it("should be able to receive the memberships when claimed", async function () {
+    // Load the contract instance using the fixture function
+    const { myMigration } = await loadFixture(deployMigrator);
+    const { myOldToken } = await loadFixture(deployOldToken)
+    const { myNewToken } = await loadFixture(deployNewToken)
+    const { myMembership } = await loadFixture(deployMembership)
+    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const [deployerWallet] = await hre.viem.getWalletClients();
+
+    // set the myOldToken as the Euler Token in the migration contract
+    await myMigration.write.initialize([myOldToken.address, myNewToken.address, myMembership.address, myAffiliate.address]);
+
+    // Send all the memberships to the migration contract
+    await myMembership.write.safeBatchTransferFrom([deployerWallet.account.address, myMigration.address, [BigInt(0)], [BigInt(1)], "0x"]);
+
+    // authorize the myMigration contract to mint and transfer from the new token
+    await myNewToken.write.grantRole([await myNewToken.read.MINTER_ROLE(), myMigration.address]);
+    await myMembership.write.grantRole([await myMembership.read.DEFAULT_ADMIN_ROLE(), myMigration.address]);
+    await myMembership.write.grantRole([await myMembership.read.MINTER_ROLE(), myMigration.address]);
+
+    // create a bigint for 4000 tokens with 18 decimals
+    const amount = BigInt(4000) * BigInt(10 ** 18);
+
+    // the owner should be able to start the migration
+    await myMigration.write.startMigration();
+    await myMigration.write.initializeMemberships();
+
+    // check that the migration is started
+    const started = await myMigration.read.isMigrationActive();
+    assert.isTrue(started);
+
+    // exclude the migration contract from the transfer fee
+    await myOldToken.write.excludeAccount([myMigration.address]);
+
+    // approve the migration to spend the tokens
+    await myOldToken.write.approve([myMigration.address, amount]);
+
+    // deposit the tokens in the migration contract
+    await myMigration.write.deposit([amount]);
+
+    // check the token balance of the migration contract
+    const balance = await myOldToken.read.balanceOf([myMigration.address]);
+
+    assert.equal(balance, amount);
+
+    // check the balance of the user in the migration contract
+    const userBalance = await myMigration.read.getUserInfo([deployerWallet.account.address]);
+    assert.equal(userBalance.deposited, amount);
+
+    // approve the migration to spend the memberships
+    await myMembership.write.setApprovalForAll([myMigration.address, true]);
+    await myMembership.write.setApprovalForAll([deployerWallet.account.address, true]);
+
+    // mine 256 blocks
+    await hre.network.provider.send("hardhat_mine", ["0x100"]);
+
+    // check the balance of nfts in the migration contract
+    const nftBalance = await myMembership.read.balanceOf([myMigration.address, BigInt(0)]);
+    console.log(nftBalance.toString())
+
+    // claim the new tokens for the user
+    await myMigration.write.claimMemberships();
+
+    // get the balance of the new token
+    const membershipsBalance = await myMembership.read.balanceOf([deployerWallet.account.address, BigInt(0)]);
+    // convert the membershipbalance to number
+    const membershipsBalanceNumber = Number(membershipsBalance.toString());
+    assert.equal(1, membershipsBalanceNumber);
+  })
 });
