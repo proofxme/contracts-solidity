@@ -1,13 +1,13 @@
 import hre from "hardhat";
 import { assert } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
-import { deployMigrator, deployOldToken, deployNewToken, deployAffiliate, deployMembership } from "./fixtures";
+import { deployAffiliate, deployMembership, deployMigrator, deployNewToken, deployOldToken } from "./fixtures";
 
 
 describe("PoXMigration deploy", function () {
   it("should deploy the contract with the proper owner", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
 
     const [deployerWallet] = await hre.viem.getWalletClients();
 
@@ -16,12 +16,12 @@ describe("PoXMigration deploy", function () {
     assert.equal(owner.toLowerCase(), deployerWallet.account.address.toLowerCase());
   });
   it("should be initialized with the proper values", async function () {
-  //load the fixtures for the token, the membership and the affiliates
-  const { myMigration } = await loadFixture(deployMigrator);
+    //load the fixtures for the token, the membership and the affiliates
+    const {myMigration} = await loadFixture(deployMigrator);
   })
   it("should not be started", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
 
     //check that the migration is not started
     const started = await myMigration.read.isMigrationActive();
@@ -30,7 +30,7 @@ describe("PoXMigration deploy", function () {
 
   it("should be able to start", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
     const [deployerWallet, depositerWallet] = await hre.viem.getWalletClients();
 
     // the owner should be able to start the migration
@@ -43,11 +43,11 @@ describe("PoXMigration deploy", function () {
 
   it("shouldn't be able to start if not owner", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
     const [deployerWallet, depositerWallet] = await hre.viem.getWalletClients();
 
     // import the contract with the depositerWallet
-    const myMigrationDepositer = await hre.viem.getContractAt("PoXMigration", myMigration.address, { walletClient: depositerWallet});
+    const myMigrationDepositer = await hre.viem.getContractAt("PoXMigration", myMigration.address, {walletClient: depositerWallet});
 
     // Attempt to start the migration in the myMigrationDepositers contract, and capture the rpc error that is thrown to validate Ownable
     let error: any;
@@ -64,11 +64,11 @@ describe("PoXMigration deploy", function () {
 describe("PoXMigration process", function () {
   it("should be able to deposit if the value is 4000 tokens", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
-    const { myOldToken } = await loadFixture(deployOldToken)
-    const { myNewToken } = await loadFixture(deployNewToken)
-    const { myMembership } = await loadFixture(deployMembership)
-    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
     const [deployerWallet] = await hre.viem.getWalletClients();
 
     // set the myOldToken as the Euler Token in the migration contract
@@ -104,11 +104,11 @@ describe("PoXMigration process", function () {
   })
   it("should not be able to deposit if the value is less than 4000 tokens", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
-    const { myOldToken } = await loadFixture(deployOldToken)
-    const { myNewToken } = await loadFixture(deployNewToken)
-    const { myMembership } = await loadFixture(deployMembership)
-    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
     const [deployerWallet] = await hre.viem.getWalletClients();
 
     // set the myOldToken as the Euler Token in the migration contract
@@ -139,11 +139,11 @@ describe("PoXMigration process", function () {
   })
   it("should be able to redeposit to get additional rewards", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
-    const { myOldToken } = await loadFixture(deployOldToken)
-    const { myNewToken } = await loadFixture(deployNewToken)
-    const { myMembership } = await loadFixture(deployMembership)
-    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
     const [deployerWallet] = await hre.viem.getWalletClients();
 
     // set the myOldToken as the Euler Token in the migration contract
@@ -184,11 +184,11 @@ describe("PoXMigration process", function () {
   })
   it("should be able to receive the new token when claimed", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
-    const { myOldToken } = await loadFixture(deployOldToken)
-    const { myNewToken } = await loadFixture(deployNewToken)
-    const { myMembership } = await loadFixture(deployMembership)
-    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
     const [deployerWallet] = await hre.viem.getWalletClients();
 
     // set the myOldToken as the Euler Token in the migration contract
@@ -237,30 +237,35 @@ describe("PoXMigration process", function () {
   })
   it("should be able to receive the memberships when claimed", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
-    const { myOldToken } = await loadFixture(deployOldToken)
-    const { myNewToken } = await loadFixture(deployNewToken)
-    const { myMembership } = await loadFixture(deployMembership)
-    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
     const [deployerWallet] = await hre.viem.getWalletClients();
 
     // set the myOldToken as the Euler Token in the migration contract
     await myMigration.write.initialize([myOldToken.address, myNewToken.address, myMembership.address, myAffiliate.address]);
-
-    // Send all the memberships to the migration contract
-    await myMembership.write.safeBatchTransferFrom([deployerWallet.account.address, myMigration.address, [BigInt(0)], [BigInt(1)], "0x"]);
 
     // authorize the myMigration contract to mint and transfer from the new token
     await myNewToken.write.grantRole([await myNewToken.read.MINTER_ROLE(), myMigration.address]);
     await myMembership.write.grantRole([await myMembership.read.DEFAULT_ADMIN_ROLE(), myMigration.address]);
     await myMembership.write.grantRole([await myMembership.read.MINTER_ROLE(), myMigration.address]);
 
+    // calculate 8 memberships to be claimed each one costing 4000
+    const membershipsToClaim = 8;
+    const membershipsCost = 4000
+
     // create a bigint for 4000 tokens with 18 decimals
-    const amount = BigInt(4000) * BigInt(10 ** 18);
+    const amount = BigInt(membershipsToClaim * membershipsCost) * BigInt(10 ** 18);
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
-    await myMigration.write.initializeMemberships();
+    await myMembership.write.mint([deployerWallet.account.address, BigInt(0), BigInt(25000), "0x00"]);
+    await myMembership.write.safeTransferFrom([deployerWallet.account.address, myMigration.address, BigInt(0), BigInt(25000), "0x00"]);
+
+    // check the balance of memberships for the mymigration contract
+    const balanceOF = await myMembership.read.balanceOf([myMigration.address, BigInt(0)]);
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
@@ -291,17 +296,15 @@ describe("PoXMigration process", function () {
     // mine 256 blocks
     await hre.network.provider.send("hardhat_mine", ["0x100"]);
 
-    // check the balance of nfts in the migration contract
-    const nftBalance = await myMembership.read.balanceOf([myMigration.address, BigInt(0)]);
-    console.log(nftBalance.toString())
-
     // claim the new tokens for the user
     await myMigration.write.claimMemberships();
 
-    // get the balance of the new token
-    const membershipsBalance = await myMembership.read.balanceOf([deployerWallet.account.address, BigInt(0)]);
-    // convert the membershipbalance to number
-    const membershipsBalanceNumber = Number(membershipsBalance.toString());
-    assert.equal(1, membershipsBalanceNumber);
+    // check the balance of the memberships for the user in the migration contract userinfo
+    const userBalance2 = await myMigration.read.getUserInfo([deployerWallet.account.address]);
+    console.log(userBalance2);
+    
+    // Check the balance of the memberships for the user
+    const membershipBalance = await myMembership.read.balanceOf([deployerWallet.account.address, BigInt(0)]);
+    assert.equal(membershipBalance, BigInt(membershipsToClaim));
   })
 });

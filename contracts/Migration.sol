@@ -10,17 +10,17 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 interface IERC20Mintable {
-  function mint( uint256 amount_ ) external;
+    function mint(uint256 amount_) external;
 
-  function mint( address account_, uint256 ammount_ ) external;
+    function mint(address account_, uint256 ammount_) external;
 
-  function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address recipient, uint256 amount) external returns (bool);
 
-  function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
 interface IERC1155Mintable {
-    function mint( address account_, uint256 id_, uint256 amount_, bytes memory data_ ) external;
+    function mint(address account_, uint256 id_, uint256 amount_, bytes memory data_) external;
 
     function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) external;
 }
@@ -50,7 +50,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
     IERC1155 public membershipNFT;
     IERC721 public affiliateNFT;
     uint256 public eulerTxFee = 100;
-    uint256 public minDepositAmount = 4000 * 10**18;
+    uint256 public minDepositAmount = 4000 * 10 ** 18;
     bool public isMigrationActive = false;
 
     mapping(address => UserInfo) public userInfo;
@@ -81,12 +81,6 @@ contract PoXMigration is Ownable, ERC1155Holder {
         initialized = true;
     }
 
-    function initializeMemberships() external onlyOwner {
-        IERC1155Mintable membershipNFTMintable = IERC1155Mintable(address(membershipNFT));
-        // mint 25000 memberships
-        membershipNFTMintable.mint(address(this), 1, 25000, "");
-    }
-
     function startMigration() external onlyOwner {
         isMigrationActive = true;
         // use current block
@@ -101,17 +95,17 @@ contract PoXMigration is Ownable, ERC1155Holder {
     }
 
     function getUserInfo(address _user)
-        public
-        view
-        returns (GetUserInfo memory) {
-                UserInfo storage user = userInfo[_user];
-                GetUserInfo memory userAux;
-                userAux.deposited = user.deposited;
-                userAux.minted = user.minted;
-                userAux.lastDeposit = user.lastDeposit;
-                userAux.memberships = user.memberships;
-                userAux.affiliates = user.affiliates;
-                return userAux;
+    public
+    view
+    returns (GetUserInfo memory) {
+        UserInfo storage user = userInfo[_user];
+        GetUserInfo memory userAux;
+        userAux.deposited = user.deposited;
+        userAux.minted = user.minted;
+        userAux.lastDeposit = user.lastDeposit;
+        userAux.memberships = user.memberships;
+        userAux.affiliates = user.affiliates;
+        return userAux;
     }
 
     function deposit(uint256 amount) external {
@@ -168,13 +162,19 @@ contract PoXMigration is Ownable, ERC1155Holder {
 
         uint104 max = 1;
 
-        if(overflowsDiv || overflowsSub) {
+        if (overflowsDiv || overflowsSub) {
             max = 1;
         }
 
         if (amountToMint > 0 && max > 0) {
             // transfer the memberships to the user
-            IERC1155Mintable(poxme).safeBatchTransferFrom(address(this), address(msg.sender), new uint256[](1), new uint256[](mintable), "");
+            uint256[] memory ids = new uint256[](1); // Array for token IDs
+            uint256[] memory amounts = new uint256[](1); // Array for amounts
+
+            ids[0] = 0;
+            amounts[0] = amountToMint; // Assuming amountToMint is the amount for that token ID
+
+            IERC1155Mintable(address(membershipNFT)).safeBatchTransferFrom(address(this), address(msg.sender), ids, amounts, "");
             user.memberships = memberships + mintable;
         }
 
