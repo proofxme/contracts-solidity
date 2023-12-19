@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
@@ -28,7 +28,7 @@ contract PoAffiliate is ERC721, ERC721Burnable, AccessControl, EIP712, ERC721Vot
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
     }
-    
+
     // The following functions are overrides required by Solidity.
 
     function _update(address to, uint256 tokenId, address auth)

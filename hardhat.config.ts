@@ -3,11 +3,11 @@ import "@nomicfoundation/hardhat-toolbox-viem";
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [{version: "0.8.20"}],
+    compilers: [{version: "0.8.22"}],
     overrides: {
       "contracts/EulerToken.sol": {
         version: "0.7.6",
-        settings: { }
+        settings: {}
       }
     }
   }

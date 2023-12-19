@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -177,7 +177,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
             uint256[] memory amounts = new uint256[](1); // Array for amounts
 
             ids[0] = 0;
-            amounts[0] = amountToMint; // Assuming amountToMint is the amount for that token ID
+            amounts[0] = mintable; // Assuming amountToMint is the amount for that token ID
 
             IERC1155Mintable(address(membershipNFT)).safeBatchTransferFrom(address(this), address(msg.sender), ids, amounts, "");
             user.mintedMemberships = memberships + mintable;
