@@ -13,8 +13,8 @@ contract PoAffiliate is ERC721, ERC721Burnable, AccessControl, EIP712, ERC721Vot
     uint256 private _nextTokenId;
 
     constructor(address defaultAdmin, address minter)
-        ERC721("PoAffiliate", "Po(A)")
-        EIP712("PoAffiliate", "1")
+    ERC721("PoAffiliate", "Po(A)")
+    EIP712("PoAffiliate", "1")
     {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MINTER_ROLE, minter);
@@ -28,29 +28,29 @@ contract PoAffiliate is ERC721, ERC721Burnable, AccessControl, EIP712, ERC721Vot
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
     }
-
+    
     // The following functions are overrides required by Solidity.
 
     function _update(address to, uint256 tokenId, address auth)
-        internal
-        override(ERC721, ERC721Votes)
-        returns (address)
+    internal
+    override(ERC721, ERC721Votes)
+    returns (address)
     {
         return super._update(to, tokenId, auth);
     }
 
     function _increaseBalance(address account, uint128 value)
-        internal
-        override(ERC721, ERC721Votes)
+    internal
+    override(ERC721, ERC721Votes)
     {
         super._increaseBalance(account, value);
     }
 
     function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, AccessControl)
-        returns (bool)
+    public
+    view
+    override(ERC721, AccessControl)
+    returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }

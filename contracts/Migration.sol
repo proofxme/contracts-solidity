@@ -25,6 +25,10 @@ interface IERC1155Mintable {
     function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) external;
 }
 
+interface ERC721Mintable {
+    function safeMint(address to) external;
+}
+
 contract PoXMigration is Ownable, ERC1155Holder {
     using Math for uint256;
     using SignedMath for int256;
@@ -33,16 +37,16 @@ contract PoXMigration is Ownable, ERC1155Holder {
         uint256 deposited;
         uint256 minted;
         uint256 lastDeposit;
-        uint256 memberships;
-        uint256 affiliates;
+        uint256 mintedMemberships;
+        uint256 mintedAffiliates;
     }
 
     struct GetUserInfo {
         uint256 deposited;
         uint256 minted;
         uint256 lastDeposit;
-        uint256 memberships;
-        uint256 affiliates;
+        uint256 mintedMemberships;
+        uint256 mintedAffiliates;
     }
 
     IERC20 public euler;
@@ -52,6 +56,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
     uint256 public eulerTxFee = 100;
     uint256 public minDepositAmount = 4000 * 10 ** 18;
     bool public isMigrationActive = false;
+    uint256 tokenId = 0;
 
     mapping(address => UserInfo) public userInfo;
 
@@ -103,8 +108,8 @@ contract PoXMigration is Ownable, ERC1155Holder {
         userAux.deposited = user.deposited;
         userAux.minted = user.minted;
         userAux.lastDeposit = user.lastDeposit;
-        userAux.memberships = user.memberships;
-        userAux.affiliates = user.affiliates;
+        userAux.mintedAffiliates = user.mintedAffiliates;
+        userAux.mintedMemberships = user.mintedMemberships;
         return userAux;
     }
 
@@ -148,7 +153,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
     function claimMemberships() external {
         UserInfo storage user = userInfo[msg.sender];
         uint256 amount = user.deposited;
-        uint256 memberships = user.memberships;
+        uint256 memberships = user.mintedMemberships;
         uint256 lastDeposit = user.lastDeposit;
 
         require(amount > 0, "You don't have any migrated tokens!");
@@ -166,7 +171,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
             max = 1;
         }
 
-        if (amountToMint > 0 && max > 0) {
+        if (mintable > 0 && max > 0) {
             // transfer the memberships to the user
             uint256[] memory ids = new uint256[](1); // Array for token IDs
             uint256[] memory amounts = new uint256[](1); // Array for amounts
@@ -175,9 +180,48 @@ contract PoXMigration is Ownable, ERC1155Holder {
             amounts[0] = amountToMint; // Assuming amountToMint is the amount for that token ID
 
             IERC1155Mintable(address(membershipNFT)).safeBatchTransferFrom(address(this), address(msg.sender), ids, amounts, "");
-            user.memberships = memberships + mintable;
+            user.mintedMemberships = memberships + mintable;
         }
 
         emit ClaimMemberships(msg.sender, amountToMint);
+    }
+
+    function claimAffiliates() external {
+        UserInfo storage user = userInfo[msg.sender];
+        uint256 amount = user.deposited;
+        uint256 affiliates = user.mintedAffiliates;
+        uint256 lastDeposit = user.lastDeposit;
+
+        require(amount > 0, "You don't have any migrated tokens!");
+        // validate that the user has not deposited in the last 100 blocks
+        require(block.number > lastDeposit + 100, "You have deposited in the last 100 blocks!");
+
+        // calculate the amount of memberships to mint by dividing the amount deposited by 4000 * 10 **18
+        (bool overflowsDiv, uint256 mintableAmount) = amount.tryDiv(40000 * 10 ** 18);
+        // round to the floor integer
+        (bool overflowsSub, uint256 mintable) = mintableAmount.trySub(affiliates);
+
+        uint104 max = 1;
+
+        if (overflowsDiv || overflowsSub) {
+            max = 1;
+        }
+
+        require(mintable > 0, "You don't have enough to claim a new Affiliate!");
+
+        if (mintable > 0 && max > 0) {
+            // transfer the memberships to the user
+            uint256[] memory ids = new uint256[](1); // Array for token IDs
+            uint256[] memory amounts = new uint256[](1); // Array for amounts
+
+            ids[0] = 0;
+            amounts[0] = mintableAmount; // Assuming amountToMint is the amount for that token ID
+            //mint a new affiliateNFT erc721 using the tokenId as id and then increase it by 1
+            ERC721Mintable(address(affiliateNFT)).safeMint(address(msg.sender));
+
+            user.mintedAffiliates = affiliates + 1;
+        }
+
+        emit ClaimMemberships(msg.sender, mintableAmount);
     }
 }
