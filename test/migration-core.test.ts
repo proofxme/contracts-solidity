@@ -1,5 +1,5 @@
 import hre from "hardhat";
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
 import { deployMigrator } from "./fixtures";
 
@@ -51,12 +51,9 @@ describe("PoXMigration deploy", function () {
 
     // Attempt to start the migration in the myMigrationDepositers contract, and capture the rpc error that is thrown to validate Ownable
     let error: any;
-    try {
-      await myMigrationDepositer.write.startMigration();
-    } catch (err) {
-      // assert that the error is OwnableUnauthorizedAccount with the proper address
-      error = err;
-    }
-    assert.isTrue(error.message.includes("OwnableUnauthorizedAccount"));
+    // check that the transaction fails with the OwnableUnauthorizedAccount error
+    await expect(myMigrationDepositer.write.startMigration()).to.be.rejectedWith(
+      'OwnableUnauthorizedAccount'
+    );
   })
 });
