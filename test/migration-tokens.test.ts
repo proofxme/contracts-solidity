@@ -208,27 +208,21 @@ describe("PoXMigration Token Program", function () {
     // approve the migration to spend the tokens
     await myOldToken.write.approve([myMigration.address, amount]);
 
+    // mine 5184000 blocks
+    await hre.network.provider.send("hardhat_mine", ["0x4F1A00"]);
+
     // deposit the tokens in the migration contract
     await myMigration.write.deposit([amount]);
 
     // check the balance of the user in the migration contract
     const userBalance = await myMigration.read.getUserInfo([deployerWallet.account.address]);
-    assert.equal(userBalance.deposited, amount);
-
-    // mine 5184000 blocks
-    await hre.network.provider.send("hardhat_mine", ["0x4F1A00"]);
-
-    // check the user info
-    const userBalance2 = await myMigration.read.getUserInfo([deployerWallet.account.address]);
-    console.log("balance 2", userBalance2)
-    assert.equal(userBalance2.deposited, amount - (amount * BigInt(5) / BigInt(10000)));
-
+    assert.equal(userBalance.deposited, amount / BigInt(2));
 
     // claim the new tokens for the user
     await myMigration.write.claimTokens();
 
     // get the balance of the new token
     const newTokenBalance = await myNewToken.read.balanceOf([deployerWallet.account.address]);
-    assert.equal(newTokenBalance, amount);
+    assert.equal(newTokenBalance, amount / BigInt(2));
   })
 });
