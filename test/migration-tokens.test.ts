@@ -177,4 +177,58 @@ describe("PoXMigration Token Program", function () {
     const newTokenBalance = await myNewToken.read.balanceOf([deployerWallet.account.address]);
     assert.equal(newTokenBalance, amount);
   })
+  it("should apply the Migration Tax Penalty appriaptely", async function () {
+    // Load the contract instance using the fixture function
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
+    const [deployerWallet] = await hre.viem.getWalletClients();
+
+    // set the myOldToken as the Euler Token in the migration contract
+    await myMigration.write.initialize([myOldToken.address, myNewToken.address, myMembership.address, myAffiliate.address]);
+
+    // authorize the myMigration contract to mint and transfer from the new token
+    await myNewToken.write.grantRole([await myNewToken.read.MINTER_ROLE(), myMigration.address]);
+
+    // create a bigint for 4000 tokens with 18 decimals
+    const amount = BigInt(40000) * BigInt(10 ** 18);
+
+    // the owner should be able to start the migration
+    await myMigration.write.startMigration();
+
+    // check that the migration is started
+    const started = await myMigration.read.isMigrationActive();
+    assert.isTrue(started);
+
+    // exclude the migration contract from the transfer fee
+    await myOldToken.write.excludeAccount([myMigration.address]);
+
+    // approve the migration to spend the tokens
+    await myOldToken.write.approve([myMigration.address, amount]);
+
+    // deposit the tokens in the migration contract
+    await myMigration.write.deposit([amount]);
+
+    // check the balance of the user in the migration contract
+    const userBalance = await myMigration.read.getUserInfo([deployerWallet.account.address]);
+    assert.equal(userBalance.deposited, amount);
+
+    // mine 5184000 blocks
+    await hre.network.provider.send("hardhat_mine", ["0x4F1A00"]);
+
+    // check the user info
+    const userBalance2 = await myMigration.read.getUserInfo([deployerWallet.account.address]);
+    console.log("balance 2", userBalance2)
+    assert.equal(userBalance2.deposited, amount - (amount * BigInt(5) / BigInt(10000)));
+
+
+    // claim the new tokens for the user
+    await myMigration.write.claimTokens();
+
+    // get the balance of the new token
+    const newTokenBalance = await myNewToken.read.balanceOf([deployerWallet.account.address]);
+    assert.equal(newTokenBalance, amount);
+  })
 });

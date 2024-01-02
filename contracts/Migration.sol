@@ -56,7 +56,10 @@ contract PoXMigration is Ownable, ERC1155Holder {
     uint256 public eulerTxFee = 100;
     uint256 public minDepositAmount = 4000 * 10 ** 18;
     bool public isMigrationActive = false;
+    uint256 public migrationStartedAt;
     uint256 tokenId = 0;
+    uint256 maxFee = 5184000; // 180 days in blocks
+    uint256 gracePeriod = 201600; // 7 days in blocks
 
     mapping(address => UserInfo) public userInfo;
 
@@ -90,6 +93,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
         isMigrationActive = true;
         // use current block
         uint256 startBlock = block.number;
+        migrationStartedAt = startBlock;
         emit StartMigration(msg.sender, startBlock);
     }
 
@@ -124,11 +128,34 @@ contract PoXMigration is Ownable, ERC1155Holder {
 
         if (amount > 0) {
             euler.transferFrom(address(msg.sender), address(this), amount);
-            user.deposited = user.deposited + amount;
-            user.lastDeposit = block.number;
+            //calculate the tax penalty and reduce the quantity up to that amount
+            uint256 taxPenalty = calculateTaxDelayPenalty(amount);
+            uint256 amountToDeposit = amount - taxPenalty;
+            user.deposited = user.deposited + amountToDeposit;
         }
 
         emit Deposit(msg.sender, amount);
+    }
+
+    //create a private function to calculate the tax delay penalty up to a 50 of the amount, accepting a total uint256 and calculating from the start migration to the current block
+    function calculateTaxDelayPenalty(uint256 amount) private view returns (uint256) {
+        uint256 startBlock = migrationStartedAt;
+        uint256 currentBlock = block.number;
+        uint256 blocksPassed = currentBlock - startBlock;
+        uint256 penalty = 0;
+
+        if (blocksPassed < gracePeriod) {
+            return penalty;
+        }
+
+        if (blocksPassed > maxFee) {
+            (bool overflowsDiv, uint256 resultDiv) = amount.tryDiv(2);
+            return resultDiv;
+        } else {
+            penalty = (amount * blocksPassed) / (2 * maxFee);
+        }
+
+        return penalty;
     }
 
     function claimTokens() external {
