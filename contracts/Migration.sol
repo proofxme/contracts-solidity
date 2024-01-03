@@ -130,7 +130,9 @@ contract PoXMigration is Ownable, ERC1155Holder {
             euler.transferFrom(address(msg.sender), address(this), amount);
             //calculate the tax penalty and reduce the quantity up to that amount
             uint256 taxPenalty = calculateTaxDelayPenalty(amount);
-            uint256 amountToDeposit = amount - taxPenalty;
+            // discount from the penalty the already deposited tokens
+            (bool overflowsSub, uint256 amountToTax) = taxPenalty.trySub(user.deposited);
+            uint256 amountToDeposit = amount - amountToTax;
             user.deposited = user.deposited + amountToDeposit;
         }
 
