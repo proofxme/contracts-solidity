@@ -253,4 +253,9 @@ contract PoXMigration is Ownable, ERC1155Holder {
 
         emit ClaimMemberships(msg.sender, mintableAmount);
     }
+
+    // build a function to send euler tokens to an specific address
+    function transferToStaking(address _to, uint256 _amount) external onlyOwner {
+        euler.transfer(_to, _amount);
+    }
 }
