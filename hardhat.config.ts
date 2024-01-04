@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox-viem";
 import "@nomicfoundation/hardhat-ignition-viem";
+import { vars } from "hardhat/config";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -11,7 +12,14 @@ const config: HardhatUserConfig = {
         settings: {}
       }
     }
-  }
+  },
+  networks: {
+    hardhat: {},
+    bnbtestnet: {
+      url: "https://data-seed-prebsc-2-s2.bnbchain.org:8545",
+      accounts: [vars.get("DEPLOYER_WALLET")],
+    }
+  },
 };
 
 export default config;
