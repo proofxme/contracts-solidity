@@ -1,7 +1,7 @@
 import hre from "hardhat";
 import { assert, expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
-import { deployAffiliate, deployMembership, deployMigrator, deployNewToken, deployOldToken } from "./fixtures";
+import { deployAffiliate, deployMembership, deployMigrator, deployNewToken, deployOldToken, deployFaucet } from "./fixtures";
 
 describe("PoXMigration deploy", function () {
   it("should deploy the contract with the proper owner", async function () {
@@ -114,5 +114,56 @@ describe("PoXMigration deploy", function () {
     // check the balance of the stakingAddress
     const stakingBalance = await myOldToken.read.balanceOf([stakingAddress.account.address]);
     assert.equal(stakingBalance, amount, "Staking address balance is not correct");
+  })
+  it("should deploy the faucet contract", async function () {
+    // Load the contract instance using the fixture function
+    const { myFaucet } = await loadFixture(deployFaucet);
+    const { myOldToken } = await loadFixture(deployOldToken)
+
+    //initialize the faucet
+    await myFaucet.write.initialize([myOldToken.address]);
+
+    // get the deployer wallet
+    const [deployerWallet] = await hre.viem.getWalletClients();
+
+    // set the amount of minted tokens
+    const amount = BigInt(100_000_000) * BigInt(10 ** 18);
+
+    // check the balance of tokens of the deployer wallet
+    const balance = await myOldToken.read.balanceOf([deployerWallet.account.address]);
+    assert.equal(balance, amount, "Wallet Balance is not correct after initialize");
+
+    // approve the faucet to spend the tokens
+    await myOldToken.write.approve([myFaucet.address, amount]);
+
+    // exclude the faucet from the transfer fee
+    await myOldToken.write.excludeAccount([myFaucet.address]);
+
+    //transfer 10_000_000 tokens to the faucet
+    const amountToTransfer = BigInt(10_000_000) * BigInt(10 ** 18);
+    await myOldToken.write.transfer([myFaucet.address, amountToTransfer]);
+
+    // check the wallet balance after the transfer
+    const balanceAfterTransfer = await myOldToken.read.balanceOf([deployerWallet.account.address]);
+    assert.equal(balanceAfterTransfer, amount - amountToTransfer, "Wallet Balance is not correct after transfer");
+
+    // check the faucet allowance
+    const faucetAllowance = await myOldToken.read.allowance([deployerWallet.account.address, myFaucet.address]);
+    assert.equal(faucetAllowance, amount, "Faucet allowance is not correct");
+
+    // check the balance of the faucet
+    const faucetBalance = await myOldToken.read.balanceOf([myFaucet.address]);
+    assert.equal(faucetBalance, amountToTransfer, "Faucet balance is not correct");
+
+    // claim 40k tokens from the faucet
+    await myFaucet.write.claim();
+
+    // check the balance of the deployer wallet
+    const balanceAfterClaim = await myOldToken.read.balanceOf([deployerWallet.account.address]);
+    assert.equal(balanceAfterClaim, amount - amountToTransfer + BigInt(40_000) * BigInt(10 ** 18), "Wallet Balance Balance is not correct after claim");
+
+    // check the balance of the faucet
+    const faucetBalanceAfterClaim = await myOldToken.read.balanceOf([myFaucet.address]);
+    assert.equal(faucetBalanceAfterClaim, amountToTransfer - BigInt(40_000) * BigInt(10 ** 18), "Faucet balance is not correct after claim");
   })
 });

@@ -40,3 +40,11 @@ export async function deployNewToken() {
 
   return { myNewToken };
 }
+
+export async function deployFaucet() {
+  const [deployerWallet] = await hre.viem.getWalletClients();
+
+  const myFaucet = await hre.viem.deployContract("EulerFaucet");
+
+  return { myFaucet };
+}
