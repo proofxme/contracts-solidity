@@ -81,7 +81,7 @@ describe("PoXMigration deploy", function () {
     await myOldToken.write.excludeAccount([myMigration.address]);
 
     // approve the migration to spend the tokens
-    await myOldToken.write.approve([myMigration.address, amount]);
+    await myOldToken.write.approve([myMigration.address, amount * BigInt(100)]);
 
     // deposit the tokens in the migration contract
     await myMigration.write.deposit([amount]);
@@ -93,12 +93,6 @@ describe("PoXMigration deploy", function () {
     // check the balance of the user in the migration contract
     const userBalance = await myMigration.read.getUserInfo([deployerWallet.account.address]);
     assert.equal(userBalance.deposited, amount, "Old Token balance is not correct");
-
-    // approve the migration contract to transfer the tokens
-    await myOldToken.write.approve([myMigration.address, amount]);
-
-    // increase the allowance of the migration contract to transfer old tokens
-    await myOldToken.write.increaseAllowance([myMigration.address, amount]);
 
     // check the token balance in the migration contract
     const migrationBalance = await myOldToken.read.balanceOf([myMigration.address]);

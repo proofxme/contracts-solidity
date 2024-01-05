@@ -7,7 +7,7 @@ contract EulerFaucet {
     IERC20 public token;
     mapping(address => uint) public lastClaimedBlock;
     uint public constant blocksBetweenClaims = 100;
-    uint public constant tokensPerClaim = 40000 * 10 ** 18;
+    uint public constant tokensPerClaim = 41000 * 10 ** 18;
     address owner;
 
     constructor() {
@@ -16,14 +16,13 @@ contract EulerFaucet {
 
     function initialize(IERC20 _token) public {
         require(owner == msg.sender, "Only owner can initialize");
-        require(token.balanceOf(address(this)) == 0, "Already initialized");
+        require(_token.balanceOf(address(this)) == 0, "Already initialized");
         token = _token;
     }
 
     function claimTokens() external returns (bool) {
-        require(address(token) != address(0), "Token not initialized");
         require(block.number >= lastClaimedBlock[msg.sender] + blocksBetweenClaims, "Wait for more blocks to pass before claiming again");
-        require(token.balanceOf(address(this)) >= tokensPerClaim, "Not enough tokens left to claim");
+        //require(token.balanceOf(address(this)) >= tokensPerClaim, "Not enough tokens left to claim");
 
         lastClaimedBlock[msg.sender] = block.number;
         // Transfer tokens safely
