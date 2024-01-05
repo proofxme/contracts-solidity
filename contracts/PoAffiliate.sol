@@ -21,7 +21,7 @@ contract PoAffiliate is ERC721, ERC721Burnable, AccessControl, EIP712, ERC721Vot
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://api.pox.me/memberships/";
+        return "https://api.pox.me/affiliates/";
     }
 
     function safeMint(address to) public onlyRole(MINTER_ROLE) {

@@ -56,6 +56,9 @@ contract PoXMigration is Ownable, ERC1155Holder {
     uint256 public eulerTxFee = 100;
     uint256 public minDepositAmount = 4000 * 10 ** 18;
     bool public isMigrationActive = false;
+    bool public isTokenMigrationActive = false;
+    bool public isMembershipMigrationActive = false;
+    bool public isAffiliateMigrationActive = false;
     uint256 public migrationStartedAt;
     uint256 tokenId = 0;
     uint256 maxFee = 5184000; // 180 days in blocks
@@ -66,6 +69,12 @@ contract PoXMigration is Ownable, ERC1155Holder {
     event Deposit(address indexed user, uint256 amount);
     event StartMigration(address indexed user, uint256 startBlock);
     event StopMigration(address indexed user, uint256 stopBlock);
+    event StartTokenMigration(address indexed user, uint256 startBlock);
+    event StopTokenMigration(address indexed user, uint256 stopBlock);
+    event StartMembershipMigration(address indexed user, uint256 startBlock);
+    event StopMembershipMigration(address indexed user, uint256 stopBlock);
+    event StartAffiliateMigration(address indexed user, uint256 startBlock);
+    event StopAffiliateMigration(address indexed user, uint256 stopBlock);
     event ClaimTokens(address indexed user, uint256 amount);
     event ClaimMemberships(address indexed user, uint256 amount);
     event ClaimAffiliates(address indexed user, uint256 amount);
@@ -89,6 +98,21 @@ contract PoXMigration is Ownable, ERC1155Holder {
         initialized = true;
     }
 
+    function setTokenAddress(address _poxme) external onlyOwner {
+        require(address(_poxme) != address(0), "Old Token address is not valid");
+        poxme = _poxme;
+    }
+
+    function setMembershipAddress(IERC1155 _membershipNFT) external onlyOwner {
+        require(address(_membershipNFT) != address(0), "Membership NFT address is not valid");
+        membershipNFT = _membershipNFT;
+    }
+
+    function setAffiliateAddress(IERC721 _affiliateNFT) external onlyOwner {
+        require(address(_affiliateNFT) != address(0), "Affiliate address is not valid");
+        affiliateNFT = _affiliateNFT;
+    }
+
     function startMigration() external onlyOwner {
         isMigrationActive = true;
         // use current block
@@ -101,6 +125,30 @@ contract PoXMigration is Ownable, ERC1155Holder {
         isMigrationActive = false;
         uint256 startBlock = block.number;
         emit StartMigration(msg.sender, startBlock);
+    }
+
+    function startTokenMigration() external onlyOwner {
+        isTokenMigrationActive = true;
+    }
+
+    function stopTokenMigration() external onlyOwner {
+        isTokenMigrationActive = false;
+    }
+
+    function startMembershipMigration() external onlyOwner {
+        isMembershipMigrationActive = true;
+    }
+
+    function stopMembershipMigration() external onlyOwner {
+        isMembershipMigrationActive = false;
+    }
+
+    function startAffiliateMigration() external onlyOwner {
+        isAffiliateMigrationActive = true;
+    }
+
+    function stopAffiliateMigration() external onlyOwner {
+        isAffiliateMigrationActive = false;
     }
 
     function getUserInfo(address _user)
@@ -166,6 +214,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
         uint256 minted = user.minted;
         uint256 lastDeposit = user.lastDeposit;
 
+        require(isTokenMigrationActive, "Token migration is not active!");
         require(amount > 0, "You don't have any migrated tokens!");
         // validate that the user has not deposited in the last 100 blocks
         require(block.number > lastDeposit + 100, "You have deposited in the last 100 blocks!");
@@ -180,6 +229,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
     }
 
     function claimMemberships() external {
+        require(isMembershipMigrationActive, "Membership migration is not active!");
         UserInfo storage user = userInfo[msg.sender];
         uint256 amount = user.deposited;
         uint256 memberships = user.mintedMemberships;
@@ -216,6 +266,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
     }
 
     function claimAffiliates() external {
+        require(isAffiliateMigrationActive, "Affiliate migration is not active!");
         UserInfo storage user = userInfo[msg.sender];
         uint256 amount = user.deposited;
         uint256 affiliates = user.mintedAffiliates;

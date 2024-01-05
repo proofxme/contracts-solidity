@@ -18,6 +18,7 @@ const config: HardhatUserConfig = {
     bnbtestnet: {
       url: "https://data-seed-prebsc-2-s2.bnbchain.org:8545",
       accounts: [vars.get("DEPLOYER_WALLET")],
+      blockGasLimit: 8800000000,
     }
   },
 };

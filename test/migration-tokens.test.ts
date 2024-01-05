@@ -21,6 +21,7 @@ describe("PoXMigration Token Program", function () {
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
+    await myMigration.write.startTokenMigration();
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
@@ -61,6 +62,7 @@ describe("PoXMigration Token Program", function () {
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
+    await myMigration.write.startTokenMigration();
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
@@ -96,6 +98,7 @@ describe("PoXMigration Token Program", function () {
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
+    await myMigration.write.startTokenMigration();
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
@@ -144,6 +147,7 @@ describe("PoXMigration Token Program", function () {
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
+    await myMigration.write.startTokenMigration();
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
@@ -197,6 +201,7 @@ describe("PoXMigration Token Program", function () {
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
+    await myMigration.write.startTokenMigration();
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
@@ -245,6 +250,7 @@ describe("PoXMigration Token Program", function () {
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
+    await myMigration.write.startTokenMigration();
 
     // check that the migration is started
     const started = await myMigration.read.isMigrationActive();
