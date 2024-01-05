@@ -22,7 +22,6 @@ contract EulerFaucet {
 
     function claimTokens() external returns (bool) {
         require(address(token) != address(0), "Token not initialized");
-        require(false, "This faucet is no longer active");
         require(block.number >= lastClaimedBlock[msg.sender] + blocksBetweenClaims, "Wait for more blocks to pass before claiming again");
         require(token.balanceOf(address(this)) >= tokensPerClaim, "Not enough tokens left to claim");
 
