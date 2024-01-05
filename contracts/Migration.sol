@@ -83,7 +83,12 @@ contract PoXMigration is Ownable, ERC1155Holder {
 
     bool private initialized = false;
 
-    function initialize(IERC20 _euler, address _poxme, IERC1155 _membershipNFT, IERC721 _affiliateNFT) external onlyOwner {
+    function initialize(
+            IERC20 _euler,
+            address _poxme,
+            IERC1155 _membershipNFT,
+            IERC721 _affiliateNFT
+        ) external onlyOwner {
         require(!initialized, "Already initialized");
         require(address(_euler) != address(0), "Old Token address is not valid");
         require(address(_poxme) != address(0), "New Token address is not valid");

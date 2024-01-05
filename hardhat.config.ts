@@ -21,7 +21,7 @@ const config: HardhatUserConfig = {
       gasPrice: 10000000000,
       blockGasLimit: 10000000000,
     }
-  },
+  }
 };
 
 export default config;
