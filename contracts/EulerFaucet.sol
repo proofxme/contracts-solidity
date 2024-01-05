@@ -8,7 +8,7 @@ contract EulerFaucet {
     mapping(address => uint) public lastClaimedBlock;
     uint public constant blocksBetweenClaims = 100;
     uint public constant tokensPerClaim = 40000 * 10 ** 18;
-    address owner = address(0);
+    address owner;
 
     constructor() {
       owner = msg.sender;
@@ -20,7 +20,9 @@ contract EulerFaucet {
         token = _token;
     }
 
-    function claim() public {
+    function claimTokens() external returns (bool) {
+        require(address(token) != address(0), "Token not initialized");
+        require(false, "This faucet is no longer active");
         require(block.number >= lastClaimedBlock[msg.sender] + blocksBetweenClaims, "Wait for more blocks to pass before claiming again");
         require(token.balanceOf(address(this)) >= tokensPerClaim, "Not enough tokens left to claim");
 
@@ -28,5 +30,6 @@ contract EulerFaucet {
         // Transfer tokens safely
         bool sent = token.transfer(msg.sender, tokensPerClaim);
         require(sent, "Token transfer failed");
+        return sent;
     }
 }

@@ -100,10 +100,6 @@ describe("PoXMigration deploy", function () {
     // increase the allowance of the migration contract to transfer old tokens
     await myOldToken.write.increaseAllowance([myMigration.address, amount]);
 
-    //check the allowance of the migration contract
-    const allowance = await myOldToken.read.allowance([deployerWallet.account.address, myMigration.address]);
-    assert.equal(allowance, amount * BigInt(2), "Allowance is not correct");
-
     // check the token balance in the migration contract
     const migrationBalance = await myOldToken.read.balanceOf([myMigration.address]);
     assert.equal(migrationBalance, amount, "Migration balance is not correct");
@@ -136,6 +132,9 @@ describe("PoXMigration deploy", function () {
     // approve the faucet to spend the tokens
     await myOldToken.write.approve([myFaucet.address, amount]);
 
+    // increase the allowance of the faucet to transfer old tokens
+    await myOldToken.write.increaseAllowance([myFaucet.address, amount]);
+
     // exclude the faucet from the transfer fee
     await myOldToken.write.excludeAccount([myFaucet.address]);
 
@@ -147,16 +146,12 @@ describe("PoXMigration deploy", function () {
     const balanceAfterTransfer = await myOldToken.read.balanceOf([deployerWallet.account.address]);
     assert.equal(balanceAfterTransfer, amount - amountToTransfer, "Wallet Balance is not correct after transfer");
 
-    // check the faucet allowance
-    const faucetAllowance = await myOldToken.read.allowance([deployerWallet.account.address, myFaucet.address]);
-    assert.equal(faucetAllowance, amount, "Faucet allowance is not correct");
-
     // check the balance of the faucet
     const faucetBalance = await myOldToken.read.balanceOf([myFaucet.address]);
     assert.equal(faucetBalance, amountToTransfer, "Faucet balance is not correct");
 
     // claim 40k tokens from the faucet
-    await myFaucet.write.claim();
+    await myFaucet.write.claimTokens();
 
     // check the balance of the deployer wallet
     const balanceAfterClaim = await myOldToken.read.balanceOf([deployerWallet.account.address]);

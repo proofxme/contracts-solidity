@@ -16,9 +16,9 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {},
     bnbtestnet: {
-      url: "https://data-seed-prebsc-2-s2.bnbchain.org:8545",
+      url: "https://solemn-autumn-thunder.bsc-testnet.quiknode.pro/ab6e492235c134e533ae20e9c5dfd7740ce6c50a/",
       accounts: [vars.get("DEPLOYER_WALLET")],
-      blockGasLimit: 8800000000,
+      gasPrice: 10000000000,
     }
   },
 };
