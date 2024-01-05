@@ -19,6 +19,7 @@ const config: HardhatUserConfig = {
       url: "https://solemn-autumn-thunder.bsc-testnet.quiknode.pro/ab6e492235c134e533ae20e9c5dfd7740ce6c50a/",
       accounts: [vars.get("DEPLOYER_WALLET")],
       gasPrice: 10000000000,
+      blockGasLimit: 10000000000,
     }
   },
 };
