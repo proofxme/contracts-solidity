@@ -20,6 +20,12 @@ const config: HardhatUserConfig = {
       accounts: [vars.get("DEPLOYER_WALLET")],
       gasPrice: 10000000000,
       blockGasLimit: 10000000000,
+    },
+    bnbmainnet: {
+      url: "https://binance.llamarpc.com",
+      accounts: [vars.get("DEPLOYER_WALLET")],
+      gasPrice: 10000000000,
+      blockGasLimit: 10000000000,
     }
   }
 };

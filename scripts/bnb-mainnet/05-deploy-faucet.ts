@@ -8,21 +8,22 @@ async function main() {
 
   // check that myToken value is null, if it is not null, it means that the contract has already been deployed
   // and we do not want to deploy it again
-  if (deploymentStatus['PoXMigration']) {
-    console.log("Migration already deployed at address", deploymentStatus['PoXMigration']);
+  if (deploymentStatus['EulerFaucet']) {
+    console.log("Faucet already deployed at address", deploymentStatus['EulerFaucet']);
     return;
   }
 
-  console.log("Migration is not deployed: Deploying")
+  console.log("Faucet is not deployed: Deploying")
 
-  const myMigration = await hre.viem.deployContract("PoXMigration", ["0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B"]);
+  console.log("deploying faucet")
+  const myFaucet = await hre.viem.deployContract("EulerFaucet");
 
   // store the address of the deployed contract in the deploymentStatus object, and persist the file
-  deploymentStatus['PoXMigration'] = myMigration.address;
+  deploymentStatus['EulerFaucet'] = myFaucet.address;
   const filePath = path.join(__dirname, './deployment-status.json');
   fs.writeFileSync(filePath, JSON.stringify(deploymentStatus, null, 2));
 
-  console.log('Migration Address', myMigration.address);
+  console.log('Faucet Address', myFaucet.address);
 }
 
 main()

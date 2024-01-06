@@ -1,3 +1,4 @@
+import { parseEther, formatEther } from "viem";
 import hre from "hardhat";
 const path = require('path');
 const fs = require('fs');
@@ -8,21 +9,20 @@ async function main() {
 
   // check that myToken value is null, if it is not null, it means that the contract has already been deployed
   // and we do not want to deploy it again
-  if (deploymentStatus['PoXMigration']) {
-    console.log("Migration already deployed at address", deploymentStatus['PoXMigration']);
+  if (deploymentStatus['EulerToken']) {
+    console.log("Old Token already deployed at address", deploymentStatus['EulerToken']);
     return;
   }
 
-  console.log("Migration is not deployed: Deploying")
+  // if the token is not deployed, deploy it and store it in the deploymentStatus object
+  const myToken = await hre.viem.deployContract("EulerTools");
 
-  const myMigration = await hre.viem.deployContract("PoXMigration", ["0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B"]);
-
-  // store the address of the deployed contract in the deploymentStatus object, and persist the file
-  deploymentStatus['PoXMigration'] = myMigration.address;
+  // store the address of the deployed contract in the deploymentStatus object, and persist the file in this same folder
+  deploymentStatus['EulerToken'] = myToken.address;
   const filePath = path.join(__dirname, './deployment-status.json');
   fs.writeFileSync(filePath, JSON.stringify(deploymentStatus, null, 2));
 
-  console.log('Migration Address', myMigration.address);
+  console.log('token Address', myToken.address);
 }
 
 main()

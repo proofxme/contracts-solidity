@@ -1,3 +1,4 @@
+import { parseEther, formatEther } from "viem";
 import hre from "hardhat";
 const path = require('path');
 const fs = require('fs');
@@ -8,21 +9,21 @@ async function main() {
 
   // check that myToken value is null, if it is not null, it means that the contract has already been deployed
   // and we do not want to deploy it again
-  if (deploymentStatus['PoXMigration']) {
-    console.log("Migration already deployed at address", deploymentStatus['PoXMigration']);
+  if (deploymentStatus['PoAffiliate']) {
+    console.log("Affiliate already deployed at address", deploymentStatus['PoAffiliate']);
     return;
   }
 
-  console.log("Migration is not deployed: Deploying")
+  console.log("Token is not deployed: Deploying")
 
-  const myMigration = await hre.viem.deployContract("PoXMigration", ["0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B"]);
+  const myAffiliate = await hre.viem.deployContract("PoAffiliate", ["0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B", "0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B"]);
 
   // store the address of the deployed contract in the deploymentStatus object, and persist the file
-  deploymentStatus['PoXMigration'] = myMigration.address;
+  deploymentStatus['PoAffiliate'] = myAffiliate.address;
   const filePath = path.join(__dirname, './deployment-status.json');
   fs.writeFileSync(filePath, JSON.stringify(deploymentStatus, null, 2));
 
-  console.log('Migration Address', myMigration.address);
+  console.log('Token Address', myAffiliate.address);
 }
 
 main()

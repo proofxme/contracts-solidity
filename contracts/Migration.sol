@@ -187,6 +187,7 @@ contract PoXMigration is Ownable, ERC1155Holder {
             (bool overflowsSub, uint256 amountToTax) = taxPenalty.trySub(user.deposited);
             uint256 amountToDeposit = amount - amountToTax;
             user.deposited = user.deposited + amountToDeposit;
+            user.lastDeposit = block.number;
         }
 
         emit Deposit(msg.sender, amount);
@@ -218,13 +219,14 @@ contract PoXMigration is Ownable, ERC1155Holder {
         uint256 amount = user.deposited;
         uint256 minted = user.minted;
         uint256 lastDeposit = user.lastDeposit;
+        uint256 amountToMint = amount - minted;
 
         require(isTokenMigrationActive, "Token migration is not active!");
         require(amount > 0, "You don't have any migrated tokens!");
+        require(amountToMint > 0, "You don't have any tokens to claim!");
+
         // validate that the user has not deposited in the last 100 blocks
         require(block.number > lastDeposit + 100, "You have deposited in the last 100 blocks!");
-
-        uint256 amountToMint = amount;
 
         if (amountToMint > 0) {
             IERC20Mintable(poxme).mint(address(msg.sender), amountToMint);
@@ -249,13 +251,9 @@ contract PoXMigration is Ownable, ERC1155Holder {
         // round to the floor integer
         (bool overflowsSub, uint256 mintable) = amountToMint.trySub(memberships);
 
-        uint104 max = 1;
+        require(mintable > 0, "You don't have enough to claim a new Membership!");
 
-        if (overflowsDiv || overflowsSub) {
-            max = 1;
-        }
-
-        if (mintable > 0 && max > 0) {
+        if (mintable > 0) {
             // transfer the memberships to the user
             uint256[] memory ids = new uint256[](1); // Array for token IDs
             uint256[] memory amounts = new uint256[](1); // Array for amounts
