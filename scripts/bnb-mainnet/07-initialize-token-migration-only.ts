@@ -57,6 +57,7 @@ async function main() {
   //get the new token contract
   const myNewToken = await hre.viem.getContractAt("ProofOfX", deploymentStatus['PoxmeToken']);
   // allow the migration to mint new tokens
+  console.log("Grant Role to Mint")
   await myNewToken.write.grantRole([await myNewToken.read.MINTER_ROLE(), myMigration.address]);
 
   console.log("Exclude migration from burn")
@@ -65,9 +66,6 @@ async function main() {
   const myOldToken = await hre.viem.getContractAt("EulerTools", deploymentStatus['EulerToken']);
   // exclude the faucet from the old token
   await myOldToken.write.excludeAccount([myMigration.address]);
-
-  console.log("Starting migration")
-
 
   console.log('Initializing Migration');
   await myMigration.write.startMigration();
