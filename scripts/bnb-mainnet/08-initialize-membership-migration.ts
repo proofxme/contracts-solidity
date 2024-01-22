@@ -41,17 +41,15 @@ async function main() {
   //get the membership contract
   const myMembership = await hre.viem.getContractAt("PoMembership", deploymentStatus['PoMembership']);
 
-  console.log('Minting Memberships')
-  // transfer the memberships to the migration contract
-  //await myMembership.write.mint(["0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B", BigInt(0), BigInt(25000), "0x00"]);
-  console.log('Transfering Memberships')
-  //await myMembership.write.safeTransferFrom(["0x4884a0409f5f3748a3dFD3fD662199cDC6b01b2B", myMigration.address, BigInt(0), BigInt(25000), "0x00"]);
-
-  console.log('Approving Memberships')
-  await myMembership.write.setApprovalForAll([myMigration.address, true]);
-
   console.log('Start membership Migration')
   await myMigration.write.startMembershipMigration();
+
+  console.log('Allow Migration to mint Memberships')
+  await myMembership.write.grantRole([await myMembership.read.MINTER_ROLE(), myMigration.address]);
+
+  // mint 25000 memberships for the migration contract
+  console.log('Mint 25000 memberships for the migration contract')
+  await myMembership.write.mint([myMigration.address, BigInt(0), BigInt(25000), '0x0']);
 }
 
 main()
