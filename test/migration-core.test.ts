@@ -1,12 +1,19 @@
 import hre from "hardhat";
 import { assert, expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
-import { deployAffiliate, deployMembership, deployMigrator, deployNewToken, deployOldToken, deployFaucet } from "./fixtures";
+import {
+  deployAffiliate,
+  deployFaucet,
+  deployMembership,
+  deployMigrator,
+  deployNewToken,
+  deployOldToken
+} from "./fixtures";
 
 describe("PoXMigration deploy", function () {
   it("should deploy the contract with the proper owner", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
 
     const [deployerWallet] = await hre.viem.getWalletClients();
 
@@ -16,11 +23,11 @@ describe("PoXMigration deploy", function () {
   });
   it("should be initialized with the proper values", async function () {
     //load the fixtures for the token, the membership and the affiliates
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
   })
   it("should not be started", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
 
     //check that the migration is not started
     const started = await myMigration.read.isMigrationActive();
@@ -29,7 +36,7 @@ describe("PoXMigration deploy", function () {
 
   it("should be able to start", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
     const [deployerWallet, depositerWallet] = await hre.viem.getWalletClients();
 
     // the owner should be able to start the migration
@@ -42,11 +49,11 @@ describe("PoXMigration deploy", function () {
 
   it("shouldn't be able to start if not owner", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
+    const {myMigration} = await loadFixture(deployMigrator);
     const [deployerWallet, depositerWallet] = await hre.viem.getWalletClients();
 
     // import the contract with the depositerWallet
-    const myMigrationDepositer = await hre.viem.getContractAt("PoXMigration", myMigration.address, { walletClient: depositerWallet });
+    const myMigrationDepositer = await hre.viem.getContractAt("PoXMigration", myMigration.address, {walletClient: depositerWallet});
 
     // Attempt to start the migration in the myMigrationDepositers contract, and capture the rpc error that is thrown to validate Ownable
     let error: any;
@@ -57,11 +64,11 @@ describe("PoXMigration deploy", function () {
   })
   it("should allow the owner to send eulers to the staking contract", async function () {
     // Load the contract instance using the fixture function
-    const { myMigration } = await loadFixture(deployMigrator);
-    const { myOldToken } = await loadFixture(deployOldToken)
-    const { myNewToken } = await loadFixture(deployNewToken)
-    const { myMembership } = await loadFixture(deployMembership)
-    const { myAffiliate } = await loadFixture(deployAffiliate)
+    const {myMigration} = await loadFixture(deployMigrator);
+    const {myOldToken} = await loadFixture(deployOldToken)
+    const {myNewToken} = await loadFixture(deployNewToken)
+    const {myMembership} = await loadFixture(deployMembership)
+    const {myAffiliate} = await loadFixture(deployAffiliate)
     const [deployerWallet, stakingAddress] = await hre.viem.getWalletClients();
 
     // set the myOldToken as the Euler Token in the migration contract
@@ -107,8 +114,8 @@ describe("PoXMigration deploy", function () {
   })
   it("should deploy the faucet contract", async function () {
     // Load the contract instance using the fixture function
-    const { myFaucet } = await loadFixture(deployFaucet);
-    const { myOldToken } = await loadFixture(deployOldToken)
+    const {myFaucet} = await loadFixture(deployFaucet);
+    const {myOldToken} = await loadFixture(deployOldToken)
 
     //initialize the faucet
     await myFaucet.write.initialize([myOldToken.address]);
