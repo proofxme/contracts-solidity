@@ -11,7 +11,7 @@ contract EulerFaucet {
     address owner;
 
     constructor() {
-      owner = msg.sender;
+        owner = msg.sender;
     }
 
     function initialize(IERC20 _token) public {
@@ -22,7 +22,7 @@ contract EulerFaucet {
 
     function claimTokens() external returns (bool) {
         require(block.number >= lastClaimedBlock[msg.sender] + blocksBetweenClaims, "Wait for more blocks to pass before claiming again");
-        //require(token.balanceOf(address(this)) >= tokensPerClaim, "Not enough tokens left to claim");
+        require(token.balanceOf(address(this)) >= tokensPerClaim, "Not enough tokens left to claim");
 
         lastClaimedBlock[msg.sender] = block.number;
         // Transfer tokens safely

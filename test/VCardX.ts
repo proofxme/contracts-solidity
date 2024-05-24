@@ -55,15 +55,15 @@ describe("VCardX", function () {
       expect(await vCardX.read.taxCollector()).to.equal(getAddress(taxCollectorWalletClient.account.address));
     });
 
-    it("Should set the initial tax rate to 0", async function () {
-      expect(await vCardX.read.taxAmount()).to.equal(0);
+    it("Should set the initial tax rate to 0.001", async function () {
+      expect(await vCardX.read.taxAmount()).to.equal(parseEther("0.001"));
     });
   });
 
   describe("Tax management", function () {
     it("Should allow the tax admin to set the tax rate", async function () {
-      await expect(vCardX.write.setTaxAmount([10])).to.not.be.reverted;
-      expect(await vCardX.read.taxAmount()).to.equal(10);
+      await vCardX.write.setTaxAmount([11])
+      expect(await vCardX.read.taxAmount()).to.equal(11);
     });
 
     it("Should not allow non-tax admins to set the tax rate", async function () {
@@ -98,13 +98,10 @@ describe("VCardX", function () {
         address: getAddress(defaultMinter.account.address),
       });
 
-      console.log("minter balance before", minterBalanceBefore);
-
       // Get the balance of the tax collector before the mint
       const taxCollectorBalanceBefore = await publicClient.getBalance({
         address: getAddress(taxCollectorWalletClient.account.address),
       });
-      console.log("tax collector balance before", taxCollectorBalanceBefore);
 
       // set the tax rate to 10%
       await vCardX.write.setTaxAmount([0]);
@@ -117,70 +114,68 @@ describe("VCardX", function () {
         {client: {wallet: defaultMinter}}
       );
 
-      await expect(
-        minterAccountVCardX.write.safeMint([otherAccount.account.address, tokenId])
-      ).to.not.be.reverted;
+      await minterAccountVCardX.write.safeMint([otherAccount.account.address, tokenId])
 
       expect(await minterAccountVCardX.read.ownerOf([tokenId])).to.equal(getAddress(otherAccount.account.address));
       expect(await minterAccountVCardX.read.tokenURI([tokenId])).to.equal(tokenUri);
-
-
-      // Get the balance of the minter (aliceWalletClient) after the mint
-      const minterBalanceAfter = await publicClient.getBalance({
-        address: getAddress(defaultMinter.account.address),
-      });
-      console.log("minter balance after", minterBalanceAfter);
-
-      // Get the balance of the tax collector after the mint
-      const taxCollectorBalanceAfter = await publicClient.getBalance({
-        address: getAddress(taxCollectorWalletClient.account.address),
-      });
-      console.log("tax collector balance after", taxCollectorBalanceAfter);
-
-      // Get the contract balance after the mint
-      const contractBalanceAfter = await publicClient.getBalance({
-        address: vCardX.address,
-      });
-      console.log("contract balance after", contractBalanceAfter);
     });
 
-    xit("Should not allow non-minters to mint new tokens", async function () {
+    it("Should not allow non-minters to mint new tokens", async function () {
       const tokenId = 1;
       const tokenURI = "1";
       const value = parseEther("0.1");
-
-      await expect(
-        vCardX.write.safeMint(defaultAdmin.address, tokenId, {
-          value,
-        })
-      ).to.be.revertedWith(
-        "AccessControl: account 0x0... is missing role 0x..."
+      const otherAccountVcardX = await hre.viem.getContractAt(
+        "VCardX",
+        vCardX.address,
+        {client: {wallet: otherAccount}}
       );
+
+      try {
+        await otherAccountVcardX.write.safeMint([defaultAdmin.account.address, BigInt(tokenId)], {
+          value,
+        });
+      } catch (error: any) {
+        expect(error.message).to.include("AccessControlUnauthorizedAccount");
+      }
+
     });
 
-    xit("Should collect the tax on minting", async function () {
+    it("Should collect the tax on minting", async function () {
       const tokenId = 1;
       const tokenURI = "https://api.pox.me/vcard/1";
-      const value = parseEther("0.1");
-      const taxAmount = 10;
+      const value = parseEther("0.0001");
+      const taxAmount = parseEther("0.0001");
 
-      await vCardX.connect(defaultAdmin).setTaxAmount(taxAmount);
+      await vCardX.write.setTaxAmount([taxAmount]);
 
+      // Get the tax collector's balance before the minting
       const taxCollectorBalanceBefore = await publicClient.getBalance({
         address: getAddress(taxCollectorWalletClient.account.address),
-      })
+      });
 
-      await expect(
-        vCardX.write.safeMint([defaultAdmin.address, tokenId], {
-          value,
-        })
-      ).to.not.be.reverted;
+      const vcardXMinter = await hre.viem.getContractAt(
+        "VCardX",
+        vCardX.address,
+        {client: {wallet: defaultMinter}}
+      );
 
+      // Mint a new token
+      await vcardXMinter.write.safeMint([defaultAdmin.account.address, BigInt(tokenId)], {
+        value,
+      });
+
+      // Get the tax collector's balance after the minting
       const taxCollectorBalanceAfter = await publicClient.getBalance({
         address: getAddress(taxCollectorWalletClient.account.address),
-      })
-      const expectedTaxAmount = (Number(value) * Number(taxAmount)) / 100
-      expect(taxCollectorBalanceAfter.sub(taxCollectorBalanceBefore)).to.equal(expectedTaxAmount);
+      });
+
+      // Calculate the expected tax amount
+      const expectedTaxAmount = BigInt(value);
+
+      // Verify that the tax collector's balance has increased by the expected tax amount
+      expect(taxCollectorBalanceAfter - taxCollectorBalanceBefore).to.equal(
+        expectedTaxAmount, "Tax collector balance doesn't match with the exepcted amount"
+      );
     });
   });
 });

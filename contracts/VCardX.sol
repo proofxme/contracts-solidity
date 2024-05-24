@@ -11,7 +11,8 @@ contract VCardX is ERC721, ERC721Burnable, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant TAX_ADMIN_ROLE = keccak256("TAX_ADMIN_ROLE");
 
-    uint256 public taxAmount = 0;
+    // set a tax amount of 0.001 gwei
+    uint256 public taxAmount = 0.001 ether;
     address payable public taxCollector;
 
     constructor(
@@ -30,7 +31,7 @@ contract VCardX is ERC721, ERC721Burnable, AccessControl {
     }
 
     modifier tax() {
-        require(msg.value >= taxAmount, "Insufficient value for tax");
+        require(msg.value >= taxAmount, "Insufficient value for tax, tax is 0.001 Ethereum");
         _;
         // Transfer the fixed tax amount to the tax collector
         taxCollector.transfer(taxAmount);

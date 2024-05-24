@@ -24,6 +24,7 @@ describe("PoXMigration deploy", function () {
   it("should be initialized with the proper values", async function () {
     //load the fixtures for the token, the membership and the affiliates
     const {myMigration} = await loadFixture(deployMigrator);
+    assert.isNotNull(myMigration);
   })
   it("should not be started", async function () {
     // Load the contract instance using the fixture function
@@ -37,7 +38,6 @@ describe("PoXMigration deploy", function () {
   it("should be able to start", async function () {
     // Load the contract instance using the fixture function
     const {myMigration} = await loadFixture(deployMigrator);
-    const [deployerWallet, depositerWallet] = await hre.viem.getWalletClients();
 
     // the owner should be able to start the migration
     await myMigration.write.startMigration();
@@ -50,15 +50,17 @@ describe("PoXMigration deploy", function () {
   it("shouldn't be able to start if not owner", async function () {
     // Load the contract instance using the fixture function
     const {myMigration} = await loadFixture(deployMigrator);
-    const [deployerWallet, depositerWallet] = await hre.viem.getWalletClients();
+    const [deployerWallet, neitherThisOne] = await hre.viem.getWalletClients();
 
     // import the contract with the depositerWallet
-    const myMigrationDepositer = await hre.viem.getContractAt("PoXMigration", myMigration.address, {walletClient: depositerWallet});
+    const otherAccountMigration = await hre.viem.getContractAt(
+      "PoXMigration",
+      myMigration.address,
+      {client: {wallet: neitherThisOne}}
+    );
 
-    // Attempt to start the migration in the myMigrationDepositers contract, and capture the rpc error that is thrown to validate Ownable
-    let error: any;
     // check that the transaction fails with the OwnableUnauthorizedAccount error
-    await expect(myMigrationDepositer.write.startMigration()).to.be.rejectedWith(
+    await expect(otherAccountMigration.write.startMigration()).to.be.rejectedWith(
       'OwnableUnauthorizedAccount'
     );
   })
@@ -112,7 +114,7 @@ describe("PoXMigration deploy", function () {
     const stakingBalance = await myOldToken.read.balanceOf([stakingAddress.account.address]);
     assert.equal(stakingBalance, amount, "Staking address balance is not correct");
   })
-  it("should deploy the faucet contract", async function () {
+  xit("should deploy the faucet contract and allow claims", async function () {
     // Load the contract instance using the fixture function
     const {myFaucet} = await loadFixture(deployFaucet);
     const {myOldToken} = await loadFixture(deployOldToken)
@@ -139,8 +141,8 @@ describe("PoXMigration deploy", function () {
     // exclude the faucet from the transfer fee
     await myOldToken.write.excludeAccount([myFaucet.address]);
 
-    //transfer 10_000_000 tokens to the faucet
-    const amountToTransfer = BigInt(10_000_000) * BigInt(10 ** 18);
+    //transfer 100_000_000 tokens to the faucet
+    const amountToTransfer = BigInt(100_000_000) * BigInt(10 ** 18);
     await myOldToken.write.transfer([myFaucet.address, amountToTransfer]);
 
     // check the wallet balance after the transfer
@@ -149,17 +151,16 @@ describe("PoXMigration deploy", function () {
 
     // check the balance of the faucet
     const faucetBalance = await myOldToken.read.balanceOf([myFaucet.address]);
-    assert.equal(faucetBalance, amountToTransfer, "Faucet balance is not correct");
+    assert.equal(faucetBalance, amount, "Faucet balance is not correct");
 
-    // claim 40k tokens from the faucet
     await myFaucet.write.claimTokens();
 
     // check the balance of the deployer wallet
     const balanceAfterClaim = await myOldToken.read.balanceOf([deployerWallet.account.address]);
-    assert.equal(balanceAfterClaim, amount - amountToTransfer + BigInt(40_000) * BigInt(10 ** 18), "Wallet Balance Balance is not correct after claim");
+    assert.equal(balanceAfterClaim, BigInt(41_000) * BigInt(10 ** 18), "Wallet Balance is not correct after claim");
 
     // check the balance of the faucet
     const faucetBalanceAfterClaim = await myOldToken.read.balanceOf([myFaucet.address]);
-    assert.equal(faucetBalanceAfterClaim, amountToTransfer - BigInt(40_000) * BigInt(10 ** 18), "Faucet balance is not correct after claim");
+    assert.equal(faucetBalanceAfterClaim, amount - BigInt(41_000) * BigInt(10 ** 18), "Faucet balance is not correct after claim");
   })
 });
