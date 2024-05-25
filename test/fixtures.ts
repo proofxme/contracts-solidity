@@ -1,4 +1,5 @@
 import hre from "hardhat";
+import { getAddress } from "viem";
 
 // Fixture function for deploying the contract
 export async function deployMigrator() {
@@ -6,7 +7,7 @@ export async function deployMigrator() {
 
   const myMigration = await hre.viem.deployContract("PoXMigration", [deployerWallet.account.address]);
 
-  return { myMigration };
+  return {myMigration};
 }
 
 export async function deployOldToken() {
@@ -14,7 +15,7 @@ export async function deployOldToken() {
 
   const myOldToken = await hre.viem.deployContract("EulerTools");
 
-  return { myOldToken };
+  return {myOldToken};
 }
 
 export async function deployAffiliate() {
@@ -22,7 +23,7 @@ export async function deployAffiliate() {
 
   const myAffiliate = await hre.viem.deployContract("PoAffiliate", [deployerWallet.account.address, deployerWallet.account.address]);
 
-  return { myAffiliate };
+  return {myAffiliate};
 }
 
 export async function deployMembership() {
@@ -30,7 +31,7 @@ export async function deployMembership() {
 
   const myMembership = await hre.viem.deployContract("PoMembership", [deployerWallet.account.address, deployerWallet.account.address]);
 
-  return { myMembership };
+  return {myMembership};
 }
 
 export async function deployNewToken() {
@@ -38,7 +39,7 @@ export async function deployNewToken() {
 
   const myNewToken = await hre.viem.deployContract("ProofOfX", [deployerWallet.account.address, deployerWallet.account.address]);
 
-  return { myNewToken };
+  return {myNewToken};
 }
 
 export async function deployFaucet() {
@@ -46,5 +47,27 @@ export async function deployFaucet() {
 
   const myFaucet = await hre.viem.deployContract("EulerFaucet");
 
-  return { myFaucet };
+  return {myFaucet};
+}
+
+export async function deployVCardXFixture() {
+  const [owner, minter, otherAccount, taxCollector] = await hre.viem.getWalletClients();
+
+  const taxAmount = 10; // Example tax rate of 10%
+
+  const vCardX = await hre.viem.deployContract("VCardX", [
+      getAddress(owner.account.address),
+      getAddress(minter.account.address),
+      getAddress(taxCollector.account.address)
+    ]
+  );
+
+  return {
+    vCardX,
+    owner,
+    minter,
+    otherAccount,
+    taxCollector,
+    taxAmount,
+  };
 }

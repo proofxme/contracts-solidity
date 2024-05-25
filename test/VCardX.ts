@@ -3,28 +3,7 @@ import hre from "hardhat";
 import { getAddress, parseEther } from "viem";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
 import "@nomicfoundation/hardhat-chai-matchers";
-
-async function deployVCardXFixture() {
-  const [owner, minter, otherAccount, taxCollector] = await hre.viem.getWalletClients();
-
-  const taxAmount = 10; // Example tax rate of 10%
-
-  const vCardX = await hre.viem.deployContract("VCardX", [
-      getAddress(owner.account.address),
-      getAddress(minter.account.address),
-      getAddress(taxCollector.account.address)
-    ]
-  );
-
-  return {
-    vCardX,
-    owner,
-    minter,
-    otherAccount,
-    taxCollector,
-    taxAmount,
-  };
-}
+import { deployVCardXFixture } from "./fixtures";
 
 describe("VCardX", function () {
   let vCardX: any;
@@ -152,6 +131,8 @@ describe("VCardX", function () {
       const taxCollectorBalanceBefore = await publicClient.getBalance({
         address: getAddress(taxCollectorWalletClient.account.address),
       });
+
+      expect(taxCollectorBalanceBefore).to.equal(parseEther("10000"), "Tax collector balance should be 0 before minting");
 
       const vcardXMinter = await hre.viem.getContractAt(
         "VCardX",
