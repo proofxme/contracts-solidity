@@ -84,7 +84,6 @@ describe("VCardCenterV1", function () {
 
     it("Should apply the member discount if the sender is not a member", async function () {
       const [sender, recipient] = await hre.viem.getWalletClients();
-      const tokenUri = "tebayoso";
 
       // grant the appropiate roles to the vCardCenter contract
       await vCardCenter.write.setMembershipDetails([
@@ -95,10 +94,6 @@ describe("VCardCenterV1", function () {
 
       //send 1 membership to the sender address
       await membershipNFT.write.mint([getAddress(sender.account.address), BigInt(0), BigInt(1), "0x0"]);
-
-
-      //set the tax to 50%
-      await vCardCenter.write.setMemberDiscountPercentage([BigInt(50)]);
 
       // calculate the fee from the contract calculateFee function:
       const shareFeeWei = await vCardCenter.read.calculateFee([getAddress(sender.account.address)]);
@@ -125,10 +120,10 @@ describe("VCardCenterV1", function () {
   });
 
   describe("setMemberDiscountPercentage", function () {
-    it("Should set the correct member discount percentage", async function () {
-      const newPercentage = BigInt(75);
-      await vCardCenter.write.setMemberDiscountPercentage([newPercentage]);
-      expect(await vCardCenter.read.memberDiscountPercentage()).to.equal(newPercentage);
+    it("Should set and apply the correct fee", async function () {
+      const newFee = parseEther("0.1");
+      await vCardCenter.write.setShareContactFee([newFee]);
+      expect(await vCardCenter.read.shareContactFee()).to.equal(parseEther("0.1"));
     });
 
     it("Should only allow the owner to set the member discount percentage", async function () {
@@ -141,7 +136,7 @@ describe("VCardCenterV1", function () {
       );
 
       try {
-        await otherAccountVCardCenter.write.setMemberDiscountPercentage([newPercentage])
+        await otherAccountVCardCenter.write.setShareContactFee([newPercentage])
       } catch (error: any) {
         expect(error.message).to.equal("Ownable: caller is not the owner");
       }
