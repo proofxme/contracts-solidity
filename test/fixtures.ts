@@ -58,7 +58,7 @@ export async function deployVCardXFixture() {
   const vCardX = await hre.viem.deployContract("VCardX", [
       getAddress(owner.account.address),
       getAddress(minter.account.address),
-      getAddress(taxCollector.account.address)
+      getAddress(owner.account.address)
     ]
   );
 
@@ -69,5 +69,17 @@ export async function deployVCardXFixture() {
     otherAccount,
     taxCollector,
     taxAmount,
+  };
+}
+
+export async function deployVCardXCenterFixture() {
+  const [owner] = await hre.viem.getWalletClients();
+  const vCardCenterV1 = await hre.viem.deployContract("VCardCenterV1", [
+    getAddress(owner.account.address)
+  ]);
+
+  return {
+    vCardCenterV1,
+    owner
   };
 }

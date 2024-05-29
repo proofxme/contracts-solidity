@@ -1,62 +1,70 @@
 // SPDX-License-Identifier: MIT
 // Compatible with OpenZeppelin Contracts ^5.0.0
-pragma solidity ^0.8.22;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Votes.sol";
 
 /// @custom:security-contact security@pox.me
-contract VCardX is ERC721, ERC721Burnable, AccessControl {
+contract VCardX is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Pausable, AccessControl, ERC721Burnable, EIP712, ERC721Votes {
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant TAX_ADMIN_ROLE = keccak256("TAX_ADMIN_ROLE");
+    uint256 private _nextTokenId;
 
-    // set a tax amount of 0.001 gwei
-    uint256 public taxAmount = 0.001 ether;
-    address payable public taxCollector;
-
-    constructor(
-        address defaultAdmin,
-        address minter,
-        address payable _taxCollector
-    ) ERC721("VCardX", "VCARDX") {
+    constructor(address defaultAdmin, address pauser, address minter)
+    ERC721("VCardX", "VCardX")
+    EIP712("VCardX", "1")
+    {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
+        _grantRole(PAUSER_ROLE, pauser);
         _grantRole(MINTER_ROLE, minter);
-        _grantRole(TAX_ADMIN_ROLE, defaultAdmin); // Assuming the defaultAdmin is the taxAdmin
-        taxCollector = _taxCollector;
-    }
-
-    function setTaxAmount(uint256 _taxAmount) public onlyRole(TAX_ADMIN_ROLE) {
-        taxAmount = _taxAmount;
-    }
-
-    modifier tax() {
-        require(msg.value >= taxAmount, "Insufficient value for tax, tax is 0.001 Ethereum");
-        _;
-        // Transfer the fixed tax amount to the tax collector
-        taxCollector.transfer(taxAmount);
-        // Refund the remaining value to the caller
-        uint256 refundAmount = msg.value - taxAmount;
-        if (refundAmount > 0) {
-            (bool success,) = msg.sender.call{value: refundAmount}("");
-            require(success, "Failed to refund remaining value");
-        }
     }
 
     function _baseURI() internal pure override returns (string memory) {
         return "https://api.pox.me/vcard/";
     }
 
-    function safeMint(address to, uint256 tokenId) public payable tax onlyRole(MINTER_ROLE) {
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+
+    function safeMint(address to, string memory uri) public onlyRole(MINTER_ROLE) {
+        uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
     }
 
     // The following functions are overrides required by Solidity.
 
+    function _update(address to, uint256 tokenId, address auth)
+    internal
+    override(ERC721, ERC721Enumerable, ERC721Pausable, ERC721Votes)
+    returns (address)
+    {
+        return super._update(to, tokenId, auth);
+    }
+
+    function _increaseBalance(address account, uint128 value)
+    internal
+    override(ERC721, ERC721Enumerable, ERC721Votes)
+    {
+        super._increaseBalance(account, value);
+    }
+
     function tokenURI(uint256 tokenId)
     public
     view
-    override
+    override(ERC721, ERC721URIStorage)
     returns (string memory)
     {
         return super.tokenURI(tokenId);
@@ -65,7 +73,7 @@ contract VCardX is ERC721, ERC721Burnable, AccessControl {
     function supportsInterface(bytes4 interfaceId)
     public
     view
-    override(ERC721, AccessControl)
+    override(ERC721, ERC721Enumerable, ERC721URIStorage, AccessControl)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);
