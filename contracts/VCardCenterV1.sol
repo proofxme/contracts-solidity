@@ -18,6 +18,7 @@ contract VCardCenterV1 is Ownable {
     uint256 public memberDiscountPercentage = 50;
     address public taxCollector;
     ERC721 public vCardNFT;
+    bool public isPaused;
 
     constructor(address _owner) Ownable(_owner) {}
 
@@ -29,10 +30,6 @@ contract VCardCenterV1 is Ownable {
 
     function setShareContactFee(uint256 _newFee) public onlyOwner {
         shareContactFee = _newFee;
-    }
-
-    function setMemberDiscountPercentage(uint256 _newPercentage) public onlyOwner {
-        memberDiscountPercentage = _newPercentage;
     }
 
     function setTaxCollector(address _newTaxCollector) public onlyOwner {
@@ -60,6 +57,7 @@ contract VCardCenterV1 is Ownable {
     }
 
     function _shareContact(address _recipient, string memory _tokenUri) private {
+        require(!isPaused, "Contract is paused");
         uint256 fee = calculateFee(msg.sender);
         require(msg.value >= fee, "Insufficient fee");
         vCardNFT.safeMint(_recipient, _tokenUri);
@@ -69,5 +67,13 @@ contract VCardCenterV1 is Ownable {
 
     function isMember(address _address) public view returns (bool) {
         return membershipNFT.balanceOf(_address, membershipTokenId) > 0;
+    }
+
+    function pause() public onlyOwner {
+        isPaused = true;
+    }
+
+    function unpause() public onlyOwner {
+        isPaused = false;
     }
 }
